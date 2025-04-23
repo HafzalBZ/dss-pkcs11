@@ -26,6 +26,11 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.security.Provider;
+import java.io.File;
+import java.io.FileWriter;
+import java.security.Security;
+import java.lang.reflect.Method;
+
 
 /**
  * Initializes the SunPKCS11 Provider
@@ -46,12 +51,33 @@ public final class SunPKCS11Initializer {
 	 * @return {@link Provider}
 	 */
 	public static Provider getProvider(String configString) {
-		try (ByteArrayInputStream bais = new ByteArrayInputStream(configString.getBytes())) {
-			Class<?> sunPkcs11ProviderClass = Class.forName(SUN_PKCS11_CLASSNAME);
-			Constructor<?> constructor = sunPkcs11ProviderClass.getConstructor(InputStream.class);
-			return (Provider) constructor.newInstance(bais);
+		// try (ByteArrayInputStream bais = new ByteArrayInputStream(configString.getBytes())) {
+		// 	Class<?> sunPkcs11ProviderClass = Class.forName(SUN_PKCS11_CLASSNAME);
+		// 	Constructor<?> constructor = sunPkcs11ProviderClass.getConstructor(InputStream.class);
+		// 	return (Provider) constructor.newInstance(bais);
+		// } catch (Exception e) {
+		// 	throw new DSSException("Unable to instantiate PKCS11 (JDK < 9) ", e);
+		// }
+		try {
+			System.out.println("hafzal: Trying to instantiate PKCS11 provider (JDK >= 9)");
+			File configFile = File.createTempFile("pkcs11-", ".cfg");
+			configFile.deleteOnExit();
+			try (FileWriter writer = new FileWriter(configFile)) {
+				writer.write(configString);
+			}
+	
+			// Load SunPKCS11 via reflection (not public in Java 9+)
+			Class<?> pkcs11Class = Class.forName("sun.security.pkcs11.SunPKCS11");
+			Method configureMethod = pkcs11Class.getMethod("configure", String.class);
+			Object sunPKCS11Instance = pkcs11Class.getDeclaredConstructor().newInstance();
+	
+			Provider provider = (Provider) configureMethod.invoke(sunPKCS11Instance, configFile.getAbsolutePath());
+			System.out.println("hafzal: PKCS11 provider instantiated successfully");
+			return provider;
+	
 		} catch (Exception e) {
-			throw new DSSException("Unable to instantiate PKCS11 (JDK < 9) ", e);
+			System.out.println("hafzal: Unable to instantiate PKCS11 provider (JDK >= 9)");
+			throw new DSSException("hafzal: Unable to instantiate PKCS11 provider (JDK >= 9)", e);
 		}
 	}
 
