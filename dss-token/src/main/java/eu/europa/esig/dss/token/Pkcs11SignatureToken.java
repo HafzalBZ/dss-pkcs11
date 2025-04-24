@@ -234,7 +234,6 @@ public class Pkcs11SignatureToken extends AbstractKeyStoreTokenConnection {
 	 *                          extra configuration for pkcs11 library
 	 */
 	public Pkcs11SignatureToken(String pkcs11Path, PasswordInputCallback callback, int slotId, int slotListIndex, String extraPkcs11Config) {
-		System.out.println("pkcs11 config by custom constructor");
         this.pkcs11Path = pkcs11Path;
         this.callback = callback;
         this.slotId = slotId;
@@ -249,7 +248,6 @@ public class Pkcs11SignatureToken extends AbstractKeyStoreTokenConnection {
 	 */
 	protected Provider getProvider() {
 		if (provider == null) {
-			System.out.println("pkcs11 custom getProvider");
 			String configString = buildConfig();
 			LOG.debug("PKCS11 Config : \n{}", configString);
 
@@ -261,8 +259,6 @@ public class Pkcs11SignatureToken extends AbstractKeyStoreTokenConnection {
 
 			// we need to add the provider to be able to sign later
 			Security.addProvider(provider);
-		}else{
-			System.out.println("skip pkcs11 custom getProvider");
 		}
 		return provider;
 	}

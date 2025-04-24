@@ -59,7 +59,6 @@ public final class SunPKCS11Initializer {
 		// 	throw new DSSException("Unable to instantiate PKCS11 (JDK < 9) ", e);
 		// }
 		try {
-			System.out.println("hafzal: Trying to instantiate PKCS11 provider (JDK >= 9)");
 			File configFile = File.createTempFile("pkcs11-", ".cfg");
 			configFile.deleteOnExit();
 			try (FileWriter writer = new FileWriter(configFile)) {
@@ -72,12 +71,10 @@ public final class SunPKCS11Initializer {
 			Object sunPKCS11Instance = pkcs11Class.getDeclaredConstructor().newInstance();
 	
 			Provider provider = (Provider) configureMethod.invoke(sunPKCS11Instance, configFile.getAbsolutePath());
-			System.out.println("hafzal: PKCS11 provider instantiated successfully");
 			return provider;
 	
 		} catch (Exception e) {
-			System.out.println("hafzal: Unable to instantiate PKCS11 provider (JDK >= 9)");
-			throw new DSSException("hafzal: Unable to instantiate PKCS11 provider (JDK >= 9)", e);
+			throw new DSSException("Unable to instantiate PKCS11 provider (JDK >= 9) with patched version", e);
 		}
 	}
 
